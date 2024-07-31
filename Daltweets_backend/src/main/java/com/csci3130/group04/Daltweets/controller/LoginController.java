@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.csci3130.group04.Daltweets.model.Login;
 import com.csci3130.group04.Daltweets.model.User;
+import com.csci3130.group04.Daltweets.model.User.Status;
 import com.csci3130.group04.Daltweets.service.Implementation.LoginServiceImpl;
 import com.csci3130.group04.Daltweets.service.Implementation.UserServiceImplementation;
 
@@ -38,9 +39,18 @@ public class LoginController {
         return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
       } else if (!authentication.getPassword().equals(login.get("password"))){
         return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
+      } 
+      
+      User user = authentication.getUser();
+      Status userStatus = user.getStatus();
+      if (user.isAccountDeleted()){
+        return new ResponseEntity<>(null, HttpStatus.UNAUTHORIZED);
       }
 
-      User user = authentication.getUser();
+      if (!userStatus.equals(Status.PENDING))
+      {
+        user = userService.changeUserStatus(user.getUsername(), Status.ONLINE);
+      }
       return new ResponseEntity<>(user, HttpStatus.OK);
     }
 
@@ -59,11 +69,17 @@ public class LoginController {
     @PostMapping("/forgot-password-change")
     ResponseEntity<String> forgotPasswordChange(@RequestBody Map<String, String> requestBody){
       Login loginEntry = loginService.getLogin(requestBody.get("username"));
-
-      if (loginEntry == null ||
-          loginEntry.getUser() == null ||
-          !loginEntry.getSecurityAnswer().equals(requestBody.get("security-answer"))){
+      User loggedInUser = loginEntry.getUser();
+      String storedSecurityAnswer = loginEntry.getSecurityAnswer();
+      String givenSecurityAnswer = requestBody.get("security-answer");
+      boolean isSameAnswer = storedSecurityAnswer.equals(givenSecurityAnswer);
+      if (loginEntry == null || loggedInUser == null) {
         return new ResponseEntity<>("Could not change password, please try again", HttpStatus.BAD_REQUEST);
+      }
+
+      if (!isSameAnswer)
+      {
+          return new ResponseEntity<>("Wrong Answer given", HttpStatus.BAD_REQUEST);
       }
 
       loginEntry.setPassword(requestBody.get("new-password"));

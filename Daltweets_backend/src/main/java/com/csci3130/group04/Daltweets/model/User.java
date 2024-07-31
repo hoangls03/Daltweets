@@ -22,6 +22,8 @@ public class User {
 
     public enum Role{
         SUPERADMIN,
+        ADMIN,
+        USER
     }
 
     public enum Status{
@@ -29,7 +31,7 @@ public class User {
         ONLINE,
         BUSY,
         AWAY,
-        DEACTIVATED
+        PENDING
     }
     @Enumerated(EnumType.STRING)
     private Role role;

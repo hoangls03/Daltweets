@@ -21,8 +21,10 @@ const HomePage = () => {
   }, []);
 
   return (
-    <div className="w-screen h-screen">
-      HomePage
+    <div className="w-full h-full min-h-screen pl-20 pr-16 pt-7">
+      <div className="pb-5  w-3/4 flex justify-center text-xl font-semibold">
+        HomePage
+      </div>
       <div className="flex flex-row flex-wrap ">
         <div className="w-3/4">
           {posts
@@ -32,8 +34,10 @@ const HomePage = () => {
                 (
                   <Post
                     key={index}
-                    username={post.user.username}
+                    username={post.creator}
                     dateCreated={post.dateCreated}
+                    commentCount = {post.commentCount}
+                    postId = {post.id}
                     {...post}
                   />
                 )
@@ -41,7 +45,7 @@ const HomePage = () => {
             )
             : (console.log(posts), (<p> Loading posts .... </p>))}
         </div>
-        <div className="m-auto">
+        <div className="m-auto pl-6 absolute top-7 right-8">
           <RecommendedUsers />
         </div>
       </div>

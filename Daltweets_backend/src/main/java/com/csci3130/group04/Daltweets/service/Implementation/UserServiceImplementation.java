@@ -1,6 +1,8 @@
 package com.csci3130.group04.Daltweets.service.Implementation;
 
 import com.csci3130.group04.Daltweets.model.User;
+import com.csci3130.group04.Daltweets.model.User.Status;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -9,7 +11,7 @@ import com.csci3130.group04.Daltweets.service.UserService;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
+
 
 @Service
 public class UserServiceImplementation implements UserService {
@@ -18,8 +20,13 @@ public class UserServiceImplementation implements UserService {
 
     @Override
     public User createUser(User user) {
-        if ( user == null || user.getUsername() == null || user.getEmail() == null) {
-            throw new IllegalArgumentException("user is empty");
+        if (user == null)
+        {
+            throw new IllegalArgumentException("given user is null");
+        }
+
+        if ( user.getUsername() == null || user.getEmail() == null) {
+            throw new IllegalArgumentException("user details are empty");
         }
         User find_user = getUserByName(user.getUsername());
         if ( find_user != null ) {
@@ -29,7 +36,8 @@ public class UserServiceImplementation implements UserService {
         if (user.getDateCreated() == null){
             user.setDateCreated(LocalDateTime.now());
         }
-        user.setStatus(User.Status.ONLINE);
+        user.setStatus(User.Status.PENDING);
+        user.setRole(User.Role.USER);
         return userRepository.save(user);
     }
     
@@ -62,7 +70,49 @@ public class UserServiceImplementation implements UserService {
 
     @Override
     public List<User> getRecommendedUsers(String name){
-
       return userRepository.findByUsernameNot(name);
+    }
+
+    @Override
+    public User addExistingUser(String name) {
+       if(name == null || name.isEmpty()) return null;
+       User user = userRepository.findByUsernameRawSearch(name);
+       if (user == null) return null;
+       user.setAccountDeleted(false);
+       return userRepository.save(user);
+    }
+
+    @Override
+    public User softDeleteUser(String name) {
+        if (name == null || name.isEmpty()) return null;
+        User user = userRepository.findByUsernameRawSearch(name);
+       if (user == null) return null;
+       user.setAccountDeleted(true);
+       return userRepository.save(user);
+    }   
+
+    @Override
+    public List<User> getSignupRequests(){
+      return userRepository.getSignupRequests();
+    }
+
+    @Override
+    public List<User> getAllUsers(){
+      return userRepository.findAll();
+    }
+
+    @Override
+    public User changeUserStatus(String username, Status status) {
+        if ( username == null ) return null;
+        User user = userRepository.findByUsernameRawSearch(username);
+        if (user == null ) return null;
+        user.setStatus(status);
+        return userRepository.save(user);
+    }
+
+    @Override
+    public boolean isValidName(String name) {
+        if ( name == null || name.isBlank() ) return false;
+        return true;
     }
 }
